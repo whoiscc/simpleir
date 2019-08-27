@@ -21,3 +21,4 @@ prog.set_stat(JsSeq([
 
 compiler = JsCompiler(prog, 'acc')
 print(compiler.compile())
+print('console.log(acc({n: 100}))')
