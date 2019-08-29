@@ -78,3 +78,7 @@ class Output(Stat):
         assert isinstance(expr, Expr)
         self.name = name
         self.expr = expr
+
+
+class Nop(Stat):
+    pass

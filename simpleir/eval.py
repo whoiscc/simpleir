@@ -136,3 +136,8 @@ class EvalSeq(Seq, EvalStat):
         for stat in self.stat_list:
             assert isinstance(stat, EvalStat)
             stat.eval_stat(runtime)
+
+
+class EvalNop(Nop, EvalStat):
+    def eval_stat(self, runtime):
+        pass

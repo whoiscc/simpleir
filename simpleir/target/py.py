@@ -6,17 +6,17 @@ from simpleir.prog import Prog
 from simpleir.target import Compiler
 
 
-class JsStat(Stat):
+class PyStat(Stat):
     def gen_stat(self, compiler):
         raise NotImplementedError()
 
 
-class JsExpr(Expr):
+class PyExpr(Expr):
     def gen_expr(self, compiler):
         raise NotImplementedError()
 
 
-class JsCompiler(Compiler):
+class PyCompiler(Compiler):
     def __init__(self, prog, name):
         super().__init__(prog)
         self.name = name
@@ -30,43 +30,40 @@ class JsCompiler(Compiler):
         return self.var_map[var]
 
     def compile(self):
-        var_str = ', '.join(self.var_map.values())
         return '\n'.join([
-            f'function {self.name}(input) {{',
-            self.indent('let output = {};'),
-            self.indent(f'let {var_str};'),
-            self.indent(self.prog.stat.gen_stat(self)),
-            self.indent('return output;'),
-            '}',
+            f'def {self.name}(input):',
+            self.indent('output = {}', 4),
+            self.indent(self.prog.stat.gen_stat(self), 4),
+            self.indent('return output', 4),
         ])
 
 
-class JsInput(Input, JsExpr):
+class PyInput(Input, PyExpr):
     def gen_expr(self, compiler):
-        return f'input.{self.name}'
+        return f"input['{self.name}']"
 
 
-class JsOutput(Output, JsStat):
+class PyOutput(Output, PyStat):
     def gen_stat(self, compiler):
-        return f'output.{self.name} = {self.expr.gen_expr(compiler)};'
+        return f"output['{self.name}'] = {self.expr.gen_expr(compiler)}"
 
 
-class JsLoad(Load, JsExpr):
+class PyLoad(Load, PyExpr):
     def gen_expr(self, compiler):
         return compiler.get_var(self.var)
 
 
-class JsAssign(Assign, JsStat):
+class PyAssign(Assign, PyStat):
     def gen_stat(self, compiler):
-        return f'{compiler.get_var(self.var)} = {self.expr.gen_expr(compiler)};'
+        return f'{compiler.get_var(self.var)} = {self.expr.gen_expr(compiler)}'
 
 
-class JsEnd(End, JsStat):
+class PyEnd(End, PyStat):
     def gen_stat(self, compiler):
-        return f'return output;'
+        return f'return output'
 
 
-class JsOp(Op, JsExpr):
+class PyOp(Op, PyExpr):
     def gen_expr(self, compiler):
         binary_map = {
             'add': '+',
@@ -81,8 +78,8 @@ class JsOp(Op, JsExpr):
             assert False
 
     def gen_binary(self, op, compiler):
-        assert isinstance(self.operand_list[0], JsExpr)
-        assert isinstance(self.operand_list[1], JsExpr)
+        assert isinstance(self.operand_list[0], PyExpr)
+        assert isinstance(self.operand_list[1], PyExpr)
         return (
             '(' +
             self.operand_list[0].gen_expr(compiler) +
@@ -92,36 +89,34 @@ class JsOp(Op, JsExpr):
         )
 
 
-class JsConst(Const, JsExpr):
+class PyConst(Const, PyExpr):
     def gen_expr(self, compiler):
         return str(self.value)
 
 
-class JsSeq(Seq, JsStat):
+class PySeq(Seq, PyStat):
     def gen_stat(self, compiler):
         return '\n'.join([stat.gen_stat(compiler) for stat in self.stat_list])
 
 
-class JsIfElse(IfElse, JsStat):
+class PyIfElse(IfElse, PyStat):
     def gen_stat(self, compiler):
         return '\n'.join([
-            f'if ({self.guard.gen_expr(compiler)}) {{',
-            Compiler.indent(self.true.gen_stat(compiler)),
-            '} else {{',
-            Compiler.indent(self.false.gen_stat(compiler)),
-            '}',
+            f'if {self.guard.gen_expr(compiler)}:',
+            Compiler.indent(self.true.gen_stat(compiler), 4),
+            'else:',
+            Compiler.indent(self.false.gen_stat(compiler), 4),
         ])
 
 
-class JsWhileDo(WhileDo, JsStat):
+class PyWhileDo(WhileDo, PyStat):
     def gen_stat(self, compiler):
         return '\n'.join([
-            f'while ({self.guard.gen_expr(compiler)}) {{',
-            Compiler.indent(self.do.gen_stat(compiler)),
-            '}',
+            f'while {self.guard.gen_expr(compiler)}:',
+            Compiler.indent(self.do.gen_stat(compiler), 4),
         ])
 
 
-class JsNop(Nop, JsStat):
+class PyNop(Nop, PyStat):
     def gen_stat(self, compiler):
-        return '// nop'
+        return '# nop'

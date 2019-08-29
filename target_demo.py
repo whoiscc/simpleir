@@ -1,23 +1,24 @@
 #
 
-from simpleir.target.js import *
+# pylint: disable = unused-wildcard-import
+from simpleir.target.py import *
 from simpleir.prog import Prog
 
 prog = Prog()
 var_sum = prog.create_var()
 var_i = prog.create_var()
 var_n = prog.create_var()
-prog.set_stat(JsSeq([
-    JsAssign(var_n, JsInput('n')),
-    JsAssign(var_sum, JsConst(0)),
-    JsAssign(var_i, JsConst(1)),
-    JsWhileDo(JsOp('le', [JsLoad(var_i), JsLoad(var_n)]), JsSeq([
-        JsAssign(var_sum, JsOp('add', [JsLoad(var_sum), JsLoad(var_i)])),
-        JsAssign(var_i, JsOp('add', [JsLoad(var_i), JsConst(1)])),
-
+prog.set_stat(PySeq([
+    PyAssign(var_n, PyInput('n')),
+    PyAssign(var_sum, PyConst(0)),
+    PyAssign(var_i, PyConst(1)),
+    PyWhileDo(PyOp('le', [PyLoad(var_i), PyLoad(var_n)]), PySeq([
+        PyAssign(var_sum, PyOp('add', [PyLoad(var_sum), PyLoad(var_i)])),
+        PyAssign(var_i, PyOp('add', [PyLoad(var_i), PyConst(1)])),
     ])),
-    JsOutput('sum', JsLoad(var_sum)),
+    PyOutput('sum', PyLoad(var_sum)),
 ]))
 
-compiler = JsCompiler(prog, 'acc')
+compiler = PyCompiler(prog, 'acc')
 print(compiler.compile())
+print("print(acc({'n': 100}))")
